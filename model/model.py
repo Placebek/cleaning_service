@@ -1,10 +1,11 @@
+from dataclasses import Field
 from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import TIMESTAMP, Boolean, Column, String, Integer, Float, ForeignKey, Date
+from sqlalchemy import Boolean, Column, DateTime, String, Integer, Float, ForeignKey, Date, func
 from sqlalchemy.orm import relationship
 
 from database.db import Base
-
 
 class User(Base):
     __tablename__ = "users"
@@ -12,34 +13,131 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String(50), default="", nullable=True)
     last_name = Column(String(50), default="", nullable=True)
-    username = Column(String(50), unique=True)
-    tg_id = Column(Integer)
     phone_number = Column(String(30))
-    cleaning_date = Column(Date)
-    created_at = Column(TIMESTAMP, default=datetime.now)
+    tg_username = Column(String(50))
+    tg_id = Column(Integer)
+
+    address_id = Column(Integer, ForeignKey('addresses.id', ondelete='CASCADE'), nullable=True)
+    
+    created_at: Optional[datetime] = Column(
+        DateTime(timezone=True), onupdate=func.now(), nullable=True
+    )
+
+    address = relationship("Address", back_populates="user", uselist=False)
+    worker = relationship("Worker", back_populates="user")
+    admin = relationship("Admin", back_populates="user")
+    request = relationship("Request", back_populates="user")
+
+
+class Admin(Base):
+    __tablename__ = "admins"
+
+    id = Column(Integer, primary_key=True, index=True)
+    hashed_password = Column(String)
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    user = relationship("User", back_populates="admin")
+    order = relationship("Order", back_populates="admin")
+
+
+class Worker(Base):
+    __tablename__ = "workers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    photo = Column(String)
+    experience = Column(Integer)
+    is_active = Column(Boolean)
+
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+
+    created_at: Optional[datetime] = Column(
+        DateTime(timezone=True), onupdate=func.now(), nullable=True
+    )
+    updated_at: Optional[datetime] = Column(
+        DateTime(timezone=True), onupdate=func.now(), nullable=True
+    )
+
+    user = relationship("User", back_populates="worker")
+    order = relationship("Order", back_populates="worker")
+
+
+class Address(Base):
+    __tablename__ = "addresses"
+
+    id = Column(Integer, primary_key=True, index=True)
 
     city_name_id = Column(Integer, ForeignKey('cities.id', ondelete='CASCADE'), nullable=True)
     street_name_id = Column(Integer, ForeignKey('streets.id', ondelete='CASCADE'), nullable=True)
-    house_number_id = Column(Integer, ForeignKey('houses.id', ondelete='CASCADE'), nullable=True)
-    apartment_number_id = Column(Integer, ForeignKey('apartments.id', ondelete='CASCADE'), nullable=True)
+    house_number = Column(Integer, nullable=True)
+    apartment_number = Column(Integer, nullable=True)
 
-    city_name = relationship("City", back_populates="user")
-    street_name = relationship("Street", back_populates="user")
-    house_number = relationship("House", back_populates="user")
-    apartment_number = relationship("Apartment", back_populates="user")
-    orders = relationship("Order", back_populates="user")
+    created_at: Optional[datetime] = Column(
+        DateTime(timezone=True), onupdate=func.now(), nullable=True
+    )
 
-    admin_user = relationship("AdminUser", back_populates="user", uselist=False)
+    user = relationship("User", back_populates="address")
+
+    city_name = relationship("City", back_populates="address")
+    street_name = relationship("Street", back_populates="address")
 
 
-class AdminUser(Base):
-    __tablename__ = "admin_users"
+class Request(Base):
+    __tablename__ = "requests"
 
     id = Column(Integer, primary_key=True, index=True)
-    hashed_password = Column(String(20))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+    volume_work_id = Column(Integer, ForeignKey('volume_works.id', ondelete='CASCADE'), nullable=True)
 
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-    user = relationship("User", back_populates="admin_user")
+    user = relationship("User", back_populates="request")
+    volume_work = relationship("VolumeWork", back_populates="request")
+    order = relationship("Order", back_populates="request")
+
+
+class Order(Base):
+    __tablename__ = "orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    worker_id = Column(Integer, ForeignKey('workers.id', ondelete='CASCADE'), nullable=True)
+    admin_id = Column(Integer, ForeignKey('admins.id', ondelete='CASCADE'), nullable=True)
+    request_id = Column(Integer, ForeignKey('requests.id', ondelete='CASCADE'), nullable=True)
+    status_id = Column(Integer, ForeignKey('statuses.id', ondelete='CASCADE'), nullable=True)
+
+    worker = relationship("Worker", back_populates="order")
+    admin = relationship("Admin", back_populates="order")
+    request = relationship("Request", back_populates="order")
+    status = relationship("Status", back_populates="order")
+
+
+class VolumeWork(Base):
+    __tablename__ = "volume_works"
+
+    id = Column(Integer, primary_key=True, index=True)
+    worker_count = Column(Integer)
+    cleaning_type_id = Column(Integer, ForeignKey('cleaning_types.id', ondelete='CASCADE'), nullable=True)
+    premises_type_id = Column(Integer, ForeignKey('premises_types.id', ondelete='CASCADE'), nullable=True)
+
+    cleaning_type = relationship("CleaningType", back_populates="volume_work")
+    premises_type = relationship("PremisesType", back_populates="volume_work")
+    request = relationship("Request", back_populates="volume_work")
+
+
+class PremisesType(Base):
+    __tablename__ = "premises_types"
+
+    id = Column(Integer, primary_key=True, index=True)
+    premises_type = Column(String(100))
+
+    volume_work = relationship("VolumeWork", back_populates="premises_type")
+
+
+class CleaningType(Base):
+    __tablename__ = "cleaning_types"
+
+    id = Column(Integer, primary_key=True, index=True)
+    cleaning_type = Column(String(50))
+
+    volume_work = relationship("VolumeWork", back_populates="cleaning_type")
 
 
 class City(Base):
@@ -48,7 +146,7 @@ class City(Base):
     id = Column(Integer, primary_key=True, index=True)
     city_name = Column(String(50))
 
-    user = relationship("User", back_populates="city_name")
+    address = relationship("Address", back_populates="city_name")
 
 
 class Street(Base):
@@ -57,54 +155,13 @@ class Street(Base):
     id = Column(Integer, primary_key=True, index=True)
     street_name = Column(String(50))
 
-    user = relationship("User", back_populates="street_name")
+    address = relationship("Address", back_populates="street_name")
 
 
-class House(Base):
-    __tablename__ = "houses"
-
-    id = Column(Integer, primary_key=True, index=True)
-    house_number = Column(Integer)
-
-    user = relationship("User", back_populates="house_number")
-
-
-class Apartment(Base):
-    __tablename__ = "apartments"
+class Status(Base):
+    __tablename__ = "statuses"
 
     id = Column(Integer, primary_key=True, index=True)
-    apartment_number = Column(Integer)
+    status_name = Column(String(50))
 
-    user = relationship("User", back_populates="apartment_number")
-    
-
-class TypeOfPremises(Base):
-    __tablename__ = "types_of_premises"
-
-    id = Column(Integer, primary_key=True, index=True)
-    type_of_premises = Column(String(100))
-
-
-class TypeOfCleaning(Base):
-    __tablename__ = "types_of_cleaning"
-
-    id = Column(Integer, primary_key=True, index=True)
-    surface_cleaning = Column(Boolean, default=False)
-    deep_cleaning = Column(Boolean, default=False)
-    sanitizing = Column(Boolean, default=False)
-
-
-class Order(Base):
-    __tablename__ = "orders"
-
-    id = Column(Integer, primary_key=True, index=True)
-
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-    user = relationship("User", back_populates="orders")
-
-    types_of_cleaning_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-    types_of_cleaning = relationship("User", back_populates="orders")
-
-    types_of_premises_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-    types_of_premises = relationship("User", back_populates="orders")
-
+    order = relationship("Order", back_populates="status")
