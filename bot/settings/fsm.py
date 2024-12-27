@@ -7,3 +7,8 @@ class Form(StatesGroup):
     object_type = State()
     room_count = State()
     cleaning_type = State()
+    address = State()
+    address_city = State()
+    address_street = State()
+    address_home = State()
+    address_appartment = State() 

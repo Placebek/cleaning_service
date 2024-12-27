@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.types import Message, CallbackQuery
 from api import FastAPIUser
 from aiogram.fsm.context import FSMContext
-from settings.button import keyboard, keyboard2, keyboard3, keyboard4
+from settings.button import *
 from aiogram import F
 from settings.fsm import Form
 
@@ -16,6 +16,7 @@ bot = Bot(token=TOKEN)
 dp=Dispatcher()
 URL='...'
 URL2='...'
+URL3='...'
 fastapi_client = FastAPIUser(url=URL)
 
 
@@ -33,14 +34,14 @@ async def cmd_start(message: Message, state: FSMContext):
         f"telegram_id: {telegram_id}"
         f"username: {username}"
     )
-    await message.answer(response)
+    print(response)
 
     tokens = fastapi_client.get_jwt_token(username=username, telegram_id=telegram_id)
 
     if tokens:
         access_token = tokens.get("access")
     else:
-        await message.answer("не удалось получить токен")
+        print("не удалось получить токен")
         return
     
     result = fastapi_client.send_user_data(
@@ -50,9 +51,9 @@ async def cmd_start(message: Message, state: FSMContext):
     )
 
     if result:
-        await message.answer("Данные отправлены")
+        print("Данные отправлены")
     else:
-        await message.answer("Произошла ошибка при отправке данных")
+        print("Произошла ошибка при отправке данных")
 
 
 #кнопки
@@ -63,9 +64,12 @@ async def username_callback(callback_query: CallbackQuery, state: FSMContext):
         await callback_query.message.answer("Напишите свое имя:")
 
     elif callback_query.data == "button2":
+        user_data = await state.get_data()
+        access_token = user_data.get("access_token")
+        keyboard = await get_object_types_keyboard(URL3, access_token)
+
         await state.set_state(Form.object_type)
-        await callback_query.message.answer(text="Выберите тип объекта:",
-                                            reply_markup=keyboard2)
+        await callback_query.message.answer("Выберите тип объекта:", reply_markup=keyboard)
         
     elif callback_query.data == "button3":
         await state.set_state(Form.room_count)
@@ -76,6 +80,11 @@ async def username_callback(callback_query: CallbackQuery, state: FSMContext):
         await state.set_state(Form.cleaning_type)
         await callback_query.message.answer(text="Выберите тип уборки:",
                                             reply_markup=keyboard4)
+        
+    elif callback_query.data == "button_room":
+        await state.set_state(Form.address)
+        await callback_query.message.answer(text="Напишите полный адрес, выбрав команды ниже:",
+                                            reply_markup=keyboard5)
     
 
 # Обработчик ввода имени
@@ -90,24 +99,24 @@ async def sand_name_user(message: Message, state: FSMContext):
         
         await state.update_data(name=name_user)
         await state.set_state(Form.object_type)
-        await message.answer("Теперь выберите тип объекта:", reply_markup=keyboard2)
 
         if response.status_code == 200:
-            await message.answer(f"Данные успешно отправлены")
+            print(f"Данные успешно отправлены")
         else:
-            await message.answer(f"Ошибка при отправке данных: {response.status_code}")
+            print(f"Ошибка при отправке данных: {response.status_code}")
     except requests.exceptions.RequestException as e:
-        await message.answer(f"Ошибка при отправке данных: {str(e)}")
+        print(f"Ошибка при отправке данных: {str(e)}")
     
 
 #Обработчик выбора типа объекта
 @dp.message(Form.object_type)
-async def process_boject_type(callback_query: CallbackQuery, state: FSMContext):
-    object_type = callback_query.data
+async def process_boject_type(message: Message, state: FSMContext):
+    user_data = await state.get_data()
+    access_token = user_data.get("access_token")
 
-    await state.update_data(object_type=object_type)
-    await state.set_state(Form.room_count)
-    await callback_query.message.answer("Теперь выберите количество комнат:", reply_markup=keyboard3)
+    keyboard = await get_object_types_keyboard(URL3, access_token)
+
+    await message.answer("Выберите тип помещения:", reply_markup=keyboard)
 
 
 #Обработчик выбора количества комнат
