@@ -38,7 +38,31 @@ class RequestResponse(BaseModel):
     class Config:
         from_attributes=True
 
+
 class OrdersResponse(BaseModel):
-    
+    worker_id: int
+    admin_id: int
+    request_id: int
+    status_id: int
+
+    photo: str
+    experience: int
+    is_active: bool
+    status_name: str
+
+    class Config:
+        from_attributes=True
+
+
+class WorkersResponse(BaseModel):
+    id: int
+    photo: str
+    experience: int
+    is_active: bool
+    user_id: int
+    first_name: str
+    last_name: str
+    phone_number: str
+
     class Config:
         from_attributes=True

@@ -5,7 +5,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth.shemas.create import AdminBase
-from app.api.auth.shemas.response import TokenResponse, UserResponse, RequestResponse
+from app.api.auth.shemas.response import TokenResponse, UserResponse, RequestResponse, WorkersResponse
 from app.api.auth.commands.context import hash_password, validate_access_token, verify_password, create_access_token
 from model.model import *
 
@@ -95,6 +95,29 @@ async def get_requests(access_token: str, db: AsyncSession):
     return [RequestResponse.from_orm(request) for request in requests]
 
 
+async def get_workers(access_token: str, db: AsyncSession):
+    await validate_user_from_token(access_token=access_token, db=db)
+
+    stmt = await db.execute(
+        select(
+            Worker.id,
+            Worker.photo,
+            Worker.experience,
+            Worker.is_active,
+            Worker.user_id,
+            User.first_name,
+            User.last_name,
+            User.phone_number,
+        )
+        .join(User, Worker.user_id==User.id)
+    )
+
+    workers = stmt.all()
+
+    return [WorkersResponse.from_orm(worker) for worker in workers]
 
 
+async def get_orders(access_token: str, db: AsyncSession):
+    await validate_user_from_token(access_token=access_token, db=db)
 
+    # stmt = 
