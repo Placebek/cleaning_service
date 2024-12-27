@@ -14,9 +14,10 @@ from settings.fsm import Form
 TOKEN=config('TOKEN')
 bot = Bot(token=TOKEN)
 dp=Dispatcher()
-URL='...'
+URL='...'#api/token
 URL2='...'
-URL3='...'
+URL3='...'#api/send/username
+URL4=''#api/city
 fastapi_client = FastAPIUser(url=URL)
 
 
@@ -81,7 +82,7 @@ async def username_callback(callback_query: CallbackQuery, state: FSMContext):
         await callback_query.message.answer(text="Выберите тип уборки:",
                                             reply_markup=keyboard4)
         
-    elif callback_query.data == "button_room":
+    elif callback_query.data == "button_address":
         await state.set_state(Form.address)
         await callback_query.message.answer(text="Напишите полный адрес, выбрав команды ниже:",
                                             reply_markup=keyboard5)
@@ -144,6 +145,31 @@ async def process_cleaning_type(callback_query: CallbackQuery, state: FSMContext
         f"Количество комнат: {user_data['room_count']}\n"
         f"Тип уборки: {user_data['cleaning_type']}"
     )
+
+
+@dp.callback_query(Form.address)
+async def address_calback(callback_query: CallbackQuery, state: FSMContext):
+    if callback_query.data == "button13":
+        await state.set_state(Form.address_city)
+        await callback_query.message.answer("Напишите свой город:")
+
+    
+    # try:
+    #     city_name = message.text.strip()
+
+    #     response = requests.post(URL4, json={"city_name": city_name})
+
+    #     await state.update_data(city_name=city_name)
+    #     await state.set_state(Form.address_street)
+
+    #     if response.status_code == 200:
+    #         print(f"Данные успешно отправлены")
+    #     else:
+    #         print(f"Ошибка при отправке данных: {response.status_code}")
+    # except requests.exceptions.RequestException as e:
+    #     print(f"Ошибка при отправке данных: {str(e)}")
+
+
 
 
 #Меню
