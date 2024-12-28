@@ -8,7 +8,7 @@ from sqlalchemy import event
 from app.router import route as auth_route
 from model.model import Request
 # from router import route as ws_route
-
+from app.api.auth.commands.auth_user_crud import flag
 
 app = FastAPI()
 
@@ -30,7 +30,7 @@ app.include_router(auth_route, prefix="/auth")
 
 @app.websocket("/ws/start")
 async def websocket_endpoint(websocket: WebSocket):
-    flag = asyncio.Event()
+    # flag = asyncio.Event()
     @event.listens_for(Request, "after_insert")
     def measurement_stream(*args, **kwargs):
         flag.set()

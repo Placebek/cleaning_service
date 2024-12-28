@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import HTTPException
 from jose import JWTError
 from sqlalchemy import insert, select, update
@@ -8,6 +10,7 @@ from app.api.auth.shemas.create import RequestCreate, UserCreate
 from app.api.auth.shemas.response import StatusResponse, TokenResponse, CityResponse
 from model.model import *
 
+flag = asyncio.Event()
 
 async def validate_user_from_token_by_tg_id(access_token: str, db: AsyncSession) -> User:
     try:
@@ -108,6 +111,7 @@ async def post_requests(data: RequestCreate, access_token: str, db: AsyncSession
     )
 
     await db.commit()
+    flag.set()
     request_id = db_request.fetchone()[0]
 
     return StatusResponse(status_code=201, status_msg=f"Reques saved successfully your request id = {request_id}")
