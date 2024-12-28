@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel
 
 
@@ -20,3 +21,9 @@ class UserCreate(BaseModel):
 class UserBase(BaseModel):
     tg_username: str
     tg_id: int
+
+
+class OrderCreate(BaseModel):
+    order_id: int
+    worker_id: int
+    status_id: Optional[int] = None

@@ -1,11 +1,11 @@
 import hashlib
 from fastapi import HTTPException
 from jose import JWTError
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth.shemas.create import AdminBase
-from app.api.auth.shemas.response import TokenResponse, UserResponse, RequestResponse, WorkersResponse
+from app.api.auth.shemas.response import TokenResponse, UserResponse, RequestResponse, WorkersResponse, StatusResponse, OrdersResponse
 from app.api.auth.commands.context import hash_password, validate_access_token, verify_password, create_access_token
 from model.model import *
 
@@ -63,9 +63,18 @@ async def get_users(access_token: str, db: AsyncSession):
     await validate_user_from_token(access_token=access_token, db=db)
 
     stmt = await db.execute(
-        select(User)
+        select(
+            User.id,
+            User.first_name,
+            User.last_name,
+            User.phone_number,
+            User.tg_username,
+            User.tg_id,
+            User.address_id,
+            User.created_at,
+        )
     )
-    users = stmt.scalars().all()
+    users = stmt.all()
     return [UserResponse.from_orm(user) for user in users]
 
 
@@ -110,6 +119,7 @@ async def get_workers(access_token: str, db: AsyncSession):
             User.phone_number,
         )
         .join(User, Worker.user_id==User.id)
+        .filter(Worker.is_active==True)
     )
 
     workers = stmt.all()
@@ -120,4 +130,81 @@ async def get_workers(access_token: str, db: AsyncSession):
 async def get_orders(access_token: str, db: AsyncSession):
     await validate_user_from_token(access_token=access_token, db=db)
 
-    # stmt = 
+    stmt = await db.execute(
+        select(
+            Order.worker_id,
+            Order.admin_id,
+            Order.request_id,
+            Order.status_id,
+        )
+    )
+
+    orders = stmt.all()
+
+    return [OrdersResponse.from_orm(order) for order in orders]
+
+
+async def upgrade_orders(worker_id: int, order_id: int, access_token: str, db: AsyncSession):
+    admin = await validate_user_from_token(access_token=access_token, db=db)
+    print("ADMIN: ", admin)
+    stmt = await db.execute(
+        select(Order)
+        .filter(Order.id==order_id)
+    )
+
+    order = stmt.scalars().first()
+    print(order)
+
+    if not order:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    upgrade_order = await db.execute(
+        update(Order)
+        .values(
+            worker_id=worker_id,
+            admin_id=admin.id,
+        )
+        .where(
+            Order.id == order_id,
+        )
+    )
+
+    await db.commit()
+
+    return StatusResponse(status_code=201, status_msg="Upgrade order")
+
+
+async def delete_orders(order_id: int, access_token: str, db: AsyncSession):
+    await validate_user_from_token(access_token=access_token, db=db)
+
+    stmt = await db.execute(
+        select(Order)
+        .filter(Order.id == order_id)
+        )
+    order = stmt.scalar_one_or_none()
+
+    if order is None:
+        raise HTTPException(status_code=404, detail="Music not found")
+
+    await db.delete(order)
+    await db.commit()
+
+    return StatusResponse(status_code=201, status_msg=f"Delete order where id == {order_id}")
+
+async def delete_request(request_id: int, access_token: str, db: AsyncSession):
+    await validate_user_from_token(access_token=access_token, db=db)
+
+    stmt = await db.execute(
+        select(Request)
+        .filter(Request.id == request_id)
+        )
+    order = stmt.scalar_one_or_none()
+
+    if order is None:
+        raise HTTPException(status_code=404, detail="Music not found")
+
+    await db.delete(order)
+    await db.commit()
+
+    return StatusResponse(status_code=201, status_msg=f"Delete order where id == {request_id}")
+    

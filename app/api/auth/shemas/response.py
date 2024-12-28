@@ -40,15 +40,15 @@ class RequestResponse(BaseModel):
 
 
 class OrdersResponse(BaseModel):
-    worker_id: int
-    admin_id: int
+    worker_id: Optional[int] = None
+    admin_id: Optional[int] = None
     request_id: int
-    status_id: int
+    status_id: Optional[int] = None
 
-    photo: str
-    experience: int
-    is_active: bool
-    status_name: str
+    # photo: str
+    # experience: int
+    # is_active: bool
+    # status_name: str
 
     class Config:
         from_attributes=True

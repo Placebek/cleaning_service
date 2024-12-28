@@ -13,9 +13,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String(50), default="", nullable=True)
     last_name = Column(String(50), default="", nullable=True)
-    phone_number = Column(String(30))
-    tg_username = Column(String(50))
-    tg_id = Column(Integer)
+    phone_number = Column(String(30), nullable=True)
+    tg_username = Column(String(50), nullable=True)
+    tg_id = Column(Integer, nullable=True)
 
     address_id = Column(Integer, ForeignKey('addresses.id', ondelete='CASCADE'), nullable=True)
     
@@ -87,6 +87,7 @@ class Request(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     volume_work_id = Column(Integer, ForeignKey('volume_works.id', ondelete='CASCADE'), nullable=True)
+    date = Column(Date)
 
     user = relationship("User", back_populates="request")
     volume_work = relationship("VolumeWork", back_populates="request")
