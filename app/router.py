@@ -10,3 +10,5 @@ route.include_router(auth_user_router, prefix="", tags=["UserAuthentication"])
 route.include_router(auth_admin_router, prefix="/admin", tags=["AdminAuthentication"])
 
 # route.include_router(docs_router, prefix="/docs", tags=["Docs"])
+
+

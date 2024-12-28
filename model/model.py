@@ -14,8 +14,8 @@ class User(Base):
     first_name = Column(String(50), default="", nullable=True)
     last_name = Column(String(50), default="", nullable=True)
     phone_number = Column(String(30), nullable=True)
-    tg_username = Column(String(50), nullable=True)
-    tg_id = Column(Integer, nullable=True)
+    tg_username = Column(String(50))
+    tg_id = Column(Integer)
 
     address_id = Column(Integer, ForeignKey('addresses.id', ondelete='CASCADE'), nullable=True)
     
@@ -44,9 +44,9 @@ class Worker(Base):
     __tablename__ = "workers"
 
     id = Column(Integer, primary_key=True, index=True)
-    photo = Column(String)
-    experience = Column(Integer)
-    is_active = Column(Boolean)
+    photo = Column(String, nullable=True)
+    experience = Column(Integer, nullable=True)
+    is_active = Column(Boolean, default=True)
 
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
 
@@ -79,6 +79,7 @@ class Address(Base):
 
     city_name = relationship("City", back_populates="address")
     street_name = relationship("Street", back_populates="address")
+    request = relationship("Request", back_populates="address")
 
 
 class Request(Base):
@@ -87,10 +88,12 @@ class Request(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     volume_work_id = Column(Integer, ForeignKey('volume_works.id', ondelete='CASCADE'), nullable=True)
+    address_id = Column(Integer, ForeignKey('addresses.id', ondelete='CASCADE'), nullable=True)
     date = Column(Date)
 
     user = relationship("User", back_populates="request")
     volume_work = relationship("VolumeWork", back_populates="request")
+    address = relationship("Address", back_populates="request")
     order = relationship("Order", back_populates="request")
 
 

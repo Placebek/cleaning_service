@@ -26,7 +26,7 @@ class Settings(BaseSettings):
         return f"postgresql+asyncpg://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
     
     TOKEN_ALGORITHM: str = 'HS256'
-    TOKEN_EXPIRE_SECONDS: int = 6000 * 6000 * 24000 * 400000000000
+    TOKEN_EXPIRE_MiNUTES: int = 60 * 15
 
 
     

@@ -15,7 +15,7 @@ def verify_password(plain_password: str, hashed_password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> tuple:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+    expire = datetime.utcnow() + (expires_delta or timedelta(settings.TOKEN_EXPIRE_MiNUTES))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.TOKEN_SECRET_KEY, algorithm=settings.TOKEN_ALGORITHM)
     return encoded_jwt, expire.isoformat()
@@ -38,13 +38,30 @@ async def validate_access_token(access_token: str) -> str:
             algorithms=[settings.TOKEN_ALGORITHM]
         )
         
-    username = payload.get("sub") 
-    if username is None:
+    tg_username = payload.get("sub") 
+    if tg_username is None:
         raise HTTPException(status_code=401, detail="Invalid token")
     
     exp = payload.get("exp")
     if exp and exp < datetime.utcnow().timestamp():
         raise HTTPException(status_code=401, detail="Token has expired")
     
-    return username
+    return tg_username
 
+
+async def validate_access_token_by_tg_id(access_token: str) -> str:
+    payload = jwt.decode(
+            access_token,
+            settings.TOKEN_SECRET_KEY,
+            algorithms=[settings.TOKEN_ALGORITHM]
+        )
+        
+    tg_id = payload.get("sub") 
+    if tg_id is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    exp = payload.get("exp")
+    if exp and exp < datetime.utcnow().timestamp():
+        raise HTTPException(status_code=401, detail="Token has expired")
+    
+    return tg_id

@@ -34,6 +34,10 @@ class RequestResponse(BaseModel):
     worker_count: int
     premises_type: str
     cleaning_type: str
+    city_name: str
+    street_name: str
+    house_number: int
+    apartment_number: int
 
     class Config:
         from_attributes=True
@@ -57,12 +61,18 @@ class OrdersResponse(BaseModel):
 class WorkersResponse(BaseModel):
     id: int
     photo: str
-    experience: int
+    experience: Optional[int] = None
     is_active: bool
     user_id: int
     first_name: str
     last_name: str
     phone_number: str
 
+    class Config:
+        from_attributes=True
+
+class CityResponse(BaseModel):
+    city_name: str
+    
     class Config:
         from_attributes=True
