@@ -97,9 +97,36 @@ async def send_cleaning_type(callback_query: CallbackQuery, state: FSMContext):
 @dp.message(Form.city)
 async def sand_city(message: Message, state: FSMContext):
     name_city = message.text.strip()
-    await state.update_data(name_city=name_city)
+
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(URL) as response:
+                if response.status == 200:
+                    city_list = await response.json()
+                    if city_list:
+                        city_buttons = [
+                            [InlineKeyboardButton(text=city, callback_data=f"city_{city}")]
+                            for city in city_list
+                        ]
+                        city_keyboard = InlineKeyboardMarkup(inline_keyboard=city_buttons)
+
+                        await message.answer(
+                            "Выберите город из списка или продолжайте ввод",
+                            reply_markup=city_keyboard
+                        )   
+                    else:
+                        await message.answer("Город не найден. Попробуйте снова")
+                else:
+                    print("Ошибка при подключении к API для получения городов.")
+        except Exception as e:
+            print(f"Ошибка при обработке данных API: {e}")
+
+@dp.callback_query(lambda c: c.data.startswith("city_"))
+async def select_city(callback_query: CallbackQuery, state: FSMContext):
+    selected_city = callback_query.data.split("city_")[1]
+    await state.update_data(name_city=selected_city)
     await state.set_state(Form.street)
-    await message.answer("Напишите свою улицу")
+    await callback_query.message.answer(f'Вы выбрали город {selected_city}\nТеперь напишите свою улицу')
 
 @dp.message(Form.street)
 async def send_city(message: Message, state: FSMContext):
@@ -120,7 +147,11 @@ async def send_home(message: Message, state: FSMContext):
     number_apartment = message.text.strip()
     await state.update_data(number_apartment=number_apartment)
     await state.set_state(Form.date_request)
-    await message.answer("А теперь напишите дату для прихода чистки на ваш обьект. В формате (12.12.2004)")
+    await message.answer("Выберите месяц:")
+
+# @dp.message(Form.date_request)
+# async def send_date_request(message: Message, state: FSMContext):
+    
 
 @dp.message(Form.date_request)
 async def send_date_request(message: Message, state: FSMContext):
@@ -134,7 +165,7 @@ async def send_date_request(message: Message, state: FSMContext):
         f"Тип объекта: {data.get('object_type')}\n"
         f"Число комнат: {data.get('number_room')}\n"
         f"Тип уборки: {data.get('cleaning_type')}\n"
-        f"Город: {data.get('name_city')}\n"
+        f"Город: {data.get('selected_city')}\n"
         f"Улица: {data.get('name_street')}\n"
         f"Дом: {data.get('name_home')}\n"
         f"Квартира: {data.get('number_apartment')}\n"
@@ -152,7 +183,7 @@ async def confirm_request(callback_query: CallbackQuery, state: FSMContext):
         "object_type": data.get("object_type"),
         "room_count": data.get("number_room"),
         "cleaning_type": data.get("cleaning_type"),
-        "city": data.get("name_city"),
+        "city": data.get("selected_city"),
         "street": data.get("name_street"),
         "home": data.get("name_home"),
         "apartment": data.get("number_apartment"),

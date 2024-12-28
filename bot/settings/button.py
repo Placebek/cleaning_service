@@ -50,3 +50,22 @@ confirm_keyboard = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="🔄 Заполнить заново", callback_data="retry_request")]
     ]
 )
+
+#Выбрать дату
+MONTH = {
+    "1": "Январь",
+    "2": "Февраль",
+    "3": "Март",
+    "4": "Апрель",
+    "5": "Май",
+    "6": "Июнь",
+    "7": "Июль",
+    "8": "Август",
+    "9": "Сентябрь",
+    "10": "Октябрь",
+    "11": "Ноябрь",
+    "12": "Декябрь"
+}
+button10 = InlineKeyboardButton(text="Январь", callback_data="button10")
+button11 = InlineKeyboardButton(text="Февраль", callback_data="button11")
+keyboard5 = InlineKeyboardMarkup(inline_keyboard=[[button10], [button11]])
