@@ -4,9 +4,7 @@ import { useAuthStore } from '../stores/auth.store'
 import {
 	Home,
 	Login,
-	NewRequests,
-	InProcessRequests,
-	CompletedRequests,
+	Orders
 } from '../components/page'
 
 export const router = createRouter({
@@ -15,9 +13,7 @@ export const router = createRouter({
 	routes: [
 		{ path: '/', component: Home },
 		{ path: '/login', component: Login },
-		{ path: '/requests/new', component: NewRequests },
-		{ path: '/requests/in_process', component: InProcessRequests },
-		{ path: '/requests/completed', component: CompletedRequests },
+		{ path: '/order', component: Orders },
 	],
 })
 

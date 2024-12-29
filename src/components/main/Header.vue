@@ -1,5 +1,10 @@
 <script setup>
 import Menu from '../page/Menu.vue'
+import { RouterLink, RouterView } from 'vue-router'
+import { useAuthStore } from '../../stores/auth.store'
+
+const authStore = useAuthStore()
+
 </script>
 
 <template>
@@ -12,5 +17,12 @@ import Menu from '../page/Menu.vue'
 		>
 			TAZA
 		</div>
+		<div class="flex justify-end gap-x-5 mr-[2vw] ">
+			<a @click="authStore.logout()" class="font-bold text-[1.3vw] mt-1 text-white hover:text-gray-200 cursor-pointer">Выйти</a>
+		</div>
+		<div>
+			<RouterView />
+		</div>
+		
 	</div>
 </template>

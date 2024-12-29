@@ -17,7 +17,7 @@ export const useAuthStore = defineStore({
 			const user = await fetchWrapper.post(`${baseUrl}`, {
 				tg_id,
 				password,
-			})
+			}, {referrerPolicy: "unsafe-url" })
 
 			// update pinia state
 			this.user = user

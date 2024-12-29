@@ -30,4 +30,4 @@ coverage
 *.tsbuildinfo
 .env
 
-src/assets/primevue/
+# src/assets/primevue/

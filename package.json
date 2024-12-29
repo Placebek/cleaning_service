@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"cert": "rm -rf .cert && mkdir -p .cert && mkcert -key-file ./key.pem -cert-file ./cert.pem '192.168.193.31'"
 	},
 	"dependencies": {
 		"pinia": "^2.3.0",
@@ -16,10 +17,12 @@
 		"v-clipboard": "^3.0.0-next.1",
 		"vee-validate": "^4.15.0",
 		"vue": "^3.5.13",
+		"vue-plugin-load-script": "^2.1.1",
 		"vue-router": "^4.5.0",
 		"yup": "^1.6.1"
 	},
 	"devDependencies": {
+		"@vitejs/plugin-basic-ssl": "^1.2.0",
 		"@vitejs/plugin-vue": "^5.2.1",
 		"@vitejs/plugin-vue-jsx": "^4.1.1",
 		"autoprefixer": "^10.4.20",
